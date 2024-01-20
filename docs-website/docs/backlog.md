@@ -2,8 +2,6 @@
 
 ## Top QOL priorities
 
-- rethink iso syntax
-  - Consider combining isoFetch and iso, as in `` iso`entrypoint Query.home_page`  `` or the like
 - publish isograph.dev (via gh-pages?)
 
 ## V2 release
@@ -74,7 +72,7 @@
 - Subscriptions
 - Interfaces/unions
 - Entrypoints
-  - Directives on isoFetch
+  - Directives on iso 
 - Field unwrapping syntax
 - Pagination
 - Refetch on missing data

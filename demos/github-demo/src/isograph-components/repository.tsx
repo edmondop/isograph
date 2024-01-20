@@ -1,5 +1,5 @@
 import React from "react";
-import { iso, isoFetch, read, useLazyReference } from "@isograph/react";
+import { iso, read, useLazyReference } from "@isograph/react";
 import { Container } from "@mui/material";
 import { ResolverParameterType as RepositoryPageParams } from "@iso/Query/repository_page/reader.isograph";
 
@@ -45,7 +45,7 @@ export function RepositoryRoute({
   route: RepositoryRouteType;
   setRoute: (route: Route) => void;
 }) {
-  const { queryReference } = useLazyReference(isoFetch`Query.repository_page`, {
+  const { queryReference } = useLazyReference(iso`entrypoint Query.repository_page`, {
     repositoryName: route.repositoryName,
     repositoryOwner: route.repositoryOwner,
     first: 20,

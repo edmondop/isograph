@@ -76,7 +76,7 @@ lazy_static! {
     // This is regex is inadequate, as iso<typeof foo`...`> is invalid, and
     // it's certainly possible to want that.
     static ref EXTRACT_ISO_LITERAL: Regex = Regex::new(r"(export const ([^ ]+) =\s+)?iso(<[^`]+>)?`([^`]+)`(\()?").unwrap();
-    static ref EXTRACT_ISO_FETCH: Regex = Regex::new(r"isoFetch(<[^`]+>)?`([^`]+)`").unwrap();
+    // static ref EXTRACT_ISO_FETCH: Regex = Regex::new(r"isoFetch(<[^`]+>)?`([^`]+)`").unwrap();
 }
 
 pub(crate) struct IsoLiteralExtraction<'a> {
@@ -103,22 +103,22 @@ pub(crate) fn extract_iso_literal_from_file_content<'a>(
         })
 }
 
-pub(crate) struct IsoFetchExtraction<'a> {
-    pub(crate) iso_fetch_text: &'a str,
-    pub(crate) iso_fetch_start_index: usize,
-}
+// pub(crate) struct IsoFetchExtraction<'a> {
+//     pub(crate) iso_fetch_text: &'a str,
+//     pub(crate) iso_fetch_start_index: usize,
+// }
 
-pub(crate) fn extract_iso_fetch_from_file_content<'a>(
-    content: &'a str,
-) -> impl Iterator<Item = IsoFetchExtraction<'a>> + 'a {
-    EXTRACT_ISO_FETCH
-        .captures_iter(content)
-        .into_iter()
-        .map(|captures| {
-            let iso_fetch_match = captures.get(2).unwrap();
-            IsoFetchExtraction {
-                iso_fetch_text: iso_fetch_match.as_str(),
-                iso_fetch_start_index: iso_fetch_match.start(),
-            }
-        })
-}
+// pub(crate) fn extract_iso_fetch_from_file_content<'a>(
+//     content: &'a str,
+// ) -> impl Iterator<Item = IsoFetchExtraction<'a>> + 'a {
+//     EXTRACT_ISO_FETCH
+//         .captures_iter(content)
+//         .into_iter()
+//         .map(|captures| {
+//             let iso_fetch_match = captures.get(2).unwrap();
+//             IsoFetchExtraction {
+//                 iso_fetch_text: iso_fetch_match.as_str(),
+//                 iso_fetch_start_index: iso_fetch_match.start(),
+//             }
+//         })
+// }

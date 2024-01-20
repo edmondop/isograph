@@ -172,7 +172,7 @@ That Isograph component isn't doing much on its own. We need to provide a way to
 
 ```tsx
 import React from "react";
-import { subscribe, isoFetch, useLazyReference, read } from "@isograph/react";
+import { subscribe useLazyReference, read } from "@isograph/react";
 
 export default function App() {
   // The "subscribe" code block can go here
@@ -186,8 +186,8 @@ export default function App() {
 
 function Inner() {
   const { queryReference } = useLazyReference(
-    isoFetch<typeof HomeRouteEntrypoint>`
-      Query.home_route
+    iso<typeof HomeRouteEntrypoint>`
+      entrypoint Query.home_route
     `,
     {
       /* query variables */
