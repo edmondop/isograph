@@ -282,26 +282,6 @@ fn extract_iso_literals(
     }
 }
 
-// fn process_iso_fetch_extraction(
-//     iso_fetch_extaction: IsoFetchExtraction<'_>,
-//     file_name: SourceFileName,
-// ) -> Result<(WithSpan<EntrypointTypeAndField>, TextSource), WithLocation<IsographLiteralParseError>>
-{
-//     let IsoFetchExtraction {
-//         iso_fetch_text,
-//         iso_fetch_start_index,
-//     } = iso_fetch_extaction;
-//     let text_source = TextSource {
-//         path: file_name,
-//         span: Some(Span::new(
-//             iso_fetch_start_index as u32,
-//             (iso_fetch_start_index + iso_fetch_text.len()) as u32,
-//         )),
-//     };
-//     let fetch_declaration = parse_iso_fetch(iso_fetch_text, text_source)?;
-//     Ok((fetch_declaration, text_source))
-// }
-
 fn process_iso_literal_extraction(
     iso_literal_extraction: IsoLiteralExtraction<'_>,
     file_name: SourceFileName,

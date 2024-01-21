@@ -24,7 +24,7 @@ use crate::{
 
 pub enum IsoLiteralExtractionResult {
     ClientFieldDeclaration(WithSpan<ResolverDeclaration>),
-    EntrypointDeclaration(WithSpan<ResolverFetch>),
+    EntrypointDeclaration(WithSpan<EntrypointTypeAndField>),
 }
 
 pub fn parse_iso_literal(

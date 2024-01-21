@@ -160,10 +160,10 @@ export type FragmentReference<
   nestedRefetchQueries: RefetchQueryArtifactWrapper[];
 };
 
-export function isoFetch<T extends IsographEntrypoint<any, any, any>>(
+export function iso<T extends IsographEntrypoint<any, any, any>>(
   _text: TemplateStringsArray
 ): T {
-  return void 0 as any;
+  throw new Error("Babel plugin not enabled")
 }
 
 export function iso<TResolverParameter, TResolverReturn = TResolverParameter>(
