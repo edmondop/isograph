@@ -48,7 +48,7 @@ pub fn parse_iso_literal(
                         .map_err(|err| err.1)?,
                 )),
                 _ => Err(WithLocation::new(
-                    IsographLiteralParseError::LeftoverTokens,
+                    IsographLiteralParseError::ExpectedFieldOrEntrypoint,
                     Location::new(text_source, discriminator.span),
                 )),
             }
