@@ -13,7 +13,7 @@ export const repository_page = iso<
   RepositoryPageParams,
   ReturnType<typeof RepositoryRouteComponent>
 >`
-  Query.repository_page($repositoryName: String!, $repositoryOwner: String!, $first: Int!) @component {
+  field Query.repository_page($repositoryName: String!, $repositoryOwner: String!, $first: Int!) @component {
     header,
     repository_detail,
   }

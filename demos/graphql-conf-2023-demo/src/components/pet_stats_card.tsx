@@ -8,7 +8,7 @@ export const pet_stats_card = iso<
   PetStatsCardParams,
   ReturnType<typeof PetStatsCard>
 >`
-  Pet.pet_stats_card @component {
+  field Pet.pet_stats_card @component {
     id,
     nickname,
     __refetch,

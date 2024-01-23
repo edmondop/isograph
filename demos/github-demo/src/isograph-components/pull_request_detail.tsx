@@ -10,7 +10,7 @@ export const pull_request_detail = iso<
   PullRequestDetailsProps,
   ReturnType<typeof PullRequestDetail>
 >`
-  Query.pull_request_detail @component {
+  field Query.pull_request_detail @component {
     repository(owner: $repositoryOwner, name: $repositoryName) {
       pullRequest(number: $pullRequestNumber) {
         title,

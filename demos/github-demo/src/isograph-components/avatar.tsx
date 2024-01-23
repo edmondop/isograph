@@ -3,7 +3,7 @@ import { ResolverParameterType as AvatarProps } from "@iso/User/avatar/reader.is
 import { Avatar } from "@mui/material";
 
 export const avatar = iso<AvatarProps, ReturnType<typeof Avatar>>`
-  User.avatar @component {
+  field User.avatar @component {
     name,
     avatarUrl,
   }

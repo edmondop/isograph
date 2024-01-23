@@ -9,7 +9,7 @@ export const pull_request_link = iso<
   PullRequestProps,
   ReturnType<typeof PullRequestLink>
 >`
-  PullRequest.pull_request_link @component {
+  field PullRequest.pull_request_link @component {
     number,
     repository {
       name,

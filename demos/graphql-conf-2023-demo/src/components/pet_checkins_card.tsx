@@ -8,7 +8,7 @@ export const pet_checkins_card = iso<
   PetCheckinsCardParams,
   ReturnType<typeof PetCheckinsCard>
 >`
-  Pet.pet_checkins_card @component {
+  field Pet.pet_checkins_card @component {
     id,
     checkins {
       id,

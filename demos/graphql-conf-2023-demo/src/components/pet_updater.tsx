@@ -6,7 +6,7 @@ import { ResolverParameterType as PetUpdaterParams } from "@iso/Pet/pet_updater/
 import { PetId } from "./router";
 
 export const pet_updater = iso<PetUpdaterParams, ReturnType<typeof PetUpdater>>`
-  Pet.pet_updater @component {
+  field Pet.pet_updater @component {
     __set_pet_best_friend,
     potential_new_best_friends {
       id,

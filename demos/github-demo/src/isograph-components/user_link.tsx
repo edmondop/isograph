@@ -5,7 +5,7 @@ import type { ResolverParameterType as UserLinkParams } from "@iso/Actor/user_li
 import { Link } from "@mui/material";
 
 export const user_link = iso<UserLinkParams, ReturnType<typeof UserLink>>`
-  Actor.user_link @component {
+  field Actor.user_link @component {
     login,
   }
 `(UserLink);

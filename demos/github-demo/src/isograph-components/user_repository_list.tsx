@@ -13,7 +13,7 @@ export const repository_list = iso<
   UserRepositoryListParams,
   ReturnType<typeof UserRepositoryList>
 >`
-  User.repository_list @component {
+  field User.repository_list @component {
     repositories(last: $first) {
       edges {
         node {

@@ -4,7 +4,7 @@ import { Container, Stack } from "@mui/material";
 import { ResolverParameterType as HomeRouteParams } from "@iso/Query/home_route/reader.isograph";
 
 export const home_route = iso<HomeRouteParams, ReturnType<typeof HomeRoute>>`
-  Query.home_route @component {
+  field Query.home_route @component {
     pets {
       id,
       pet_summary_card,

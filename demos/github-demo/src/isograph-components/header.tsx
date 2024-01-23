@@ -9,7 +9,7 @@ import { Route } from "./github_demo";
 import logo from "./svgs/dark-logo.svg";
 
 export const header = iso<HeaderProps, ReturnType<typeof Header>>`
-  Query.header @component {
+  field Query.header @component {
     viewer {
       name,
       avatar,

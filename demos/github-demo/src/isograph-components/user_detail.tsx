@@ -3,7 +3,7 @@ import type { ResolverParameterType as UserDetailParams } from "@iso/Query/user_
 import { RepoLink } from "./RepoLink";
 
 export const user_detail = iso<UserDetailParams, ReturnType<typeof UserDetail>>`
-  Query.user_detail @component {
+  field Query.user_detail @component {
     user(login: $userLogin) {
       name,
       repository_list,

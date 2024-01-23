@@ -35,11 +35,11 @@ pub fn parse_iso_literal(
     let mut tokens = PeekableLexer::new(iso_literal_text);
     tokens
         .with_span(|tokens| {
-            let discriminator: WithSpan<StringKey> = tokens
-                .parse_string_key_type(IsographLangTokenKind::Identifier)
+            let discriminator = tokens
+                .parse_source_of_kind(IsographLangTokenKind::Identifier)
                 .map_err(|with_span| with_span.map(IsographLiteralParseError::from))
                 .map_err(|err| err.to_with_location(text_source))?;
-            match discriminator.item.lookup() {
+            match tokens.source(discriminator.span) {
                 "entrypoint" => Ok(IsoLiteralExtractionResult::EntrypointDeclaration(
                     parse_iso_fetch(tokens, text_source)?,
                 )),

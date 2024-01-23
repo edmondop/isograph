@@ -7,7 +7,7 @@ export const home_page_list = iso<
   HomePageListParams,
   ReturnType<typeof HomePageList>
 >`
-  Query.home_page_list($first: Int!) @component {
+  field Query.home_page_list($first: Int!) @component {
     viewer {
       login,
       name,
