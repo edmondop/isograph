@@ -7,10 +7,7 @@ use common_lang_types::{
 use graphql_lang_types::{
     ListTypeAnnotation, NamedTypeAnnotation, NonNullTypeAnnotation, TypeAnnotation,
 };
-use intern::{
-    string_key::{Intern, StringKey},
-    Lookup,
-};
+use intern::string_key::{Intern, StringKey};
 use isograph_lang_types::{
     EntrypointTypeAndField, FragmentDirectiveUsage, LinkedFieldSelection, NonConstantValue,
     ResolverDeclaration, ScalarFieldSelection, Selection, SelectionFieldArgument,
@@ -39,7 +36,7 @@ pub fn parse_iso_literal(
                 .parse_source_of_kind(IsographLangTokenKind::Identifier)
                 .map_err(|with_span| with_span.map(IsographLiteralParseError::from))
                 .map_err(|err| err.to_with_location(text_source))?;
-            match tokens.source(discriminator.span) {
+            match discriminator.item {
                 "entrypoint" => Ok(IsoLiteralExtractionResult::EntrypointDeclaration(
                     parse_iso_fetch(tokens, text_source)?,
                 )),

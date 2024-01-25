@@ -195,7 +195,7 @@ export function useLazyReference<
     TReadFromStore,
     TResolverProps,
     TResolverResult
-  >,
+  > | typeof iso,
   variables: object
 ): {
   queryReference: FragmentReference<

@@ -8,6 +8,7 @@ function compileTag(t, path, config) {
   if (tag.isIdentifier({ name: "iso" })) {
     // Don't do anything for iso tags
   }
+  debugger;
   if (tag.isIdentifier({ name: "iso" })) {
     // OOOPS, not convinced
     return compileIsoFetchTag(t, path, config);

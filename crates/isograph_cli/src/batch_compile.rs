@@ -304,13 +304,6 @@ fn process_iso_literal_extraction(
 
     let mut errors = vec![];
 
-    if !has_associated_js_function {
-        errors.push(WithLocation::new(
-            IsographLiteralParseError::ExpectedAssociatedJsFunction,
-            Location::new(text_source, Span::todo_generated()),
-        ));
-    }
-
     // TODO return errors if any occurred, otherwise Ok
     match parse_iso_literal(&iso_literal_text, interned_file_path, text_source) {
         Ok(res) => {
@@ -322,6 +315,12 @@ fn process_iso_literal_extraction(
                     const_export_name,
                     resolver_declaration.item.resolver_field_name.item,
                 );
+                if !has_associated_js_function {
+                    errors.push(WithLocation::new(
+                        IsographLiteralParseError::ExpectedAssociatedJsFunction,
+                        Location::new(text_source, Span::todo_generated()),
+                    ));
+                }
                 if exists_and_matches {
                     if errors.is_empty() {
                         Ok((extraction_result, text_source))
