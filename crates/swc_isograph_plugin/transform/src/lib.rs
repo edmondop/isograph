@@ -2,9 +2,9 @@
 
 use std::path::{Path, PathBuf};
 
+use isograph_schema::CompilerConfig;
 use once_cell::sync::Lazy;
 use regex::Regex;
-use serde::Deserialize;
 use swc_atoms::JsWord;
 use swc_common::{FileName, Mark, DUMMY_SP};
 use swc_ecma_ast::*;
@@ -45,16 +45,9 @@ struct Isograph<'a> {
     // root_dir: PathBuf,
     // pages_dir: Option<PathBuf>,
     file_name: FileName,
-    config: &'a Config,
+    config: &'a CompilerConfig,
     // imports: Vec<RelayImport>,
     unresolved_mark: Option<Mark>,
-}
-
-#[derive(Deserialize, Debug, Default, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct Config {
-    pub artifact_directory: Option<PathBuf>,
-    pub root_directory: Option<PathBuf>,
 }
 
 struct IsographEntrypoint {
@@ -81,7 +74,11 @@ impl IsographEntrypoint {
             type_args: None,
         })
     }
-    pub fn to_import_expr(self, config: &Config, unresolved_mark: Option<Mark>) -> Option<Expr> {
+    pub fn to_import_expr(
+        self,
+        config: &CompilerConfig,
+        unresolved_mark: Option<Mark>,
+    ) -> Option<Expr> {
         // const filename = path.state.filename;
         // const folder = pathModule.dirname(filename);
         // const cwd = path.state.cwd;
@@ -102,19 +99,25 @@ impl IsographEntrypoint {
     fn path_for_artifact(
         &self,
         real_file_name: &Path,
-        config: &Config,
+        config: &CompilerConfig,
     ) -> Result<PathBuf, BuildRequirePathError> {
-        let filename = format!("/__isograph/{}/{}/{}.ts", self.field_type, self.field_name, self.artifact_type)
-
-        if let Some(artifact_directory) = config.artifact_directory {
-            Ok(root_dir.join(artifact_directory).join(filename))
-        }else {
-            Ok(real_file_name
-                .parent()
-                .unwrap()
-                .join("__generated__")
-                .join(filename))
-        }
+        let filename = format!(
+            "/__isograph/{}/{}/{}.ts",
+            self.field_type, self.field_name, self.artifact_type
+        );
+        let current_filename = "something".to_string();
+        let current_cwd = PathBuf::new();
+        todo!("wip");
+        // let artifact_directory =
+        // if let Some(artifact_directory) = config.artifact_directory {
+        //     Ok(root_dir.join(artifact_directory).join(filename))
+        // } else {
+        //     Ok(real_file_name
+        //         .parent()
+        //         .unwrap()
+        //         .join("__generated__")
+        //         .join(filename))
+        // }
     }
 
     // fn build_require_path(
@@ -133,7 +136,8 @@ static OPERATION_REGEX: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"\\s*(entrypoint|field)\\s*([^\\.\\s]+)\\.([^\\s\\(]+)").unwrap());
 
 fn parse_iso_call_arg_into_type(expr_or_spread: &ExprOrSpread) -> Option<IsographEntrypoint> {
-    match *expr_or_spread.expr {
+    // Todo: maybe move to visitMut
+    match *expr_or_spread.expr.clone() {
         Expr::Lit(Lit::Str(iso_entrypoint)) => {
             let capture_group = OPERATION_REGEX
                 .captures_iter(&iso_entrypoint.value.as_str())
@@ -200,7 +204,7 @@ impl<'a> Isograph<'a> {
 }
 
 pub fn isograph(
-    config: &Config,
+    config: &CompilerConfig,
     file_name: FileName,
     unresolved_mark: Option<Mark>,
 ) -> impl Fold + '_ {

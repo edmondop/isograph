@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use isograph_cli;
 use serde_json::Value;
 use swc_common::{plugin::metadata::TransformPluginMetadataContextKind, FileName};
 use swc_core::{
@@ -7,13 +8,12 @@ use swc_core::{
     plugin::{plugin_transform, proxies::TransformPluginProgramMetadata},
 };
 
-use swc_isograph:::Config
-
 #[plugin_transform]
 fn isograph_plugin_transform(
     program: Program,
     metadata: TransformPluginProgramMetadata,
 ) -> Program {
+    let config = isograph_cli::config::create_config();
     let filename = if let Some(filename) =
         metadata.get_context(&TransformPluginMetadataContextKind::Filename)
     {
