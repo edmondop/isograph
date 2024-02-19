@@ -2,7 +2,7 @@
 
 use std::path::{Path, PathBuf};
 
-use isograph_schema::CompilerConfig;
+use isograph_config::CompilerConfig;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use swc_atoms::JsWord;
