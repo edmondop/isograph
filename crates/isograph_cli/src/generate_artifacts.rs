@@ -561,8 +561,8 @@ fn generate_entrypoint_artifact<'schema>(
                 .object(schema.query_type_id.expect("expect query type to exist"))
                 .into(),
             selection_set,
-            artifact_queue,
-            encountered_resolvers_ids,
+            Some(artifact_queue),
+            Some(encountered_resolvers_ids),
             &top_level_resolver,
         );
 
@@ -612,9 +612,8 @@ fn generate_reader_artifact<'schema>(
                 .object(schema.query_type_id.expect("expect query type to exist"))
                 .into(),
             selection_set,
-            // TODO this is obviously a smell
-            &mut vec![],
-            &mut HashSet::new(),
+            None,
+            None,
             resolver,
         );
 
@@ -748,7 +747,7 @@ pub(crate) struct ReaderArtifactInfo<'schema> {
     pub resolver_read_out_type: ResolverReadOutType,
     pub reader_ast: ReaderAst,
     pub resolver_parameter_type: ResolverParameterType,
-    pub resolver_return_type: ResolverReturnType,
+    pub resolver_return_type: Option<ResolverReturnType>,
     pub resolver_import_statement: ResolverImportStatement,
     pub resolver_variant: ResolverVariant,
 }
@@ -1033,8 +1032,7 @@ fn write_query_types_from_selection(
                         match nested_resolver_imports.entry(resolver.type_and_field) {
                             Entry::Occupied(mut occupied) => {
                                 occupied.get_mut().types.push(ResolverImportType {
-                                    original: ResolverImportName("ReadOutType".to_string()),
-                                    alias: ResolverImportAlias(format!(
+                                    globally_unique_type_name: ResolverImportName(format!(
                                         "{}__outputType",
                                         resolver.type_and_field.underscore_separated()
                                     )),
@@ -1044,8 +1042,7 @@ fn write_query_types_from_selection(
                                 vacant.insert(ResolverImport {
                                     default_import: false,
                                     types: vec![ResolverImportType {
-                                        original: ResolverImportName("ReadOutType".to_string()),
-                                        alias: ResolverImportAlias(format!(
+                                        globally_unique_type_name: ResolverImportName(format!(
                                             "{}__outputType",
                                             resolver.type_and_field.underscore_separated()
                                         )),
@@ -1233,13 +1230,8 @@ pub(crate) struct ResolverImportName(pub String);
 derive_display!(ResolverImportName);
 
 #[derive(Debug)]
-pub(crate) struct ResolverImportAlias(pub String);
-derive_display!(ResolverImportAlias);
-
-#[derive(Debug)]
 pub struct ResolverImportType {
-    pub(crate) original: ResolverImportName,
-    pub(crate) alias: ResolverImportAlias,
+    pub(crate) globally_unique_type_name: ResolverImportName,
 }
 #[derive(Debug)]
 pub struct ResolverImport {
@@ -1624,22 +1616,27 @@ fn generate_read_out_type(resolver_definition: &ValidatedSchemaResolver) -> Reso
     match &resolver_definition.variant {
         variant => match variant {
             ResolverVariant::Component => ResolverReadOutType("(React.FC<any>)".to_string()),
-            ResolverVariant::Eager => ResolverReadOutType("ResolverReturnType".to_string()),
-            ResolverVariant::RefetchField => ResolverReadOutType("any".to_string()),
-            ResolverVariant::MutationField(_) => ResolverReadOutType("any".to_string()),
+            ResolverVariant::Eager => {
+                ResolverReadOutType("ReturnType<typeof resolver>".to_string())
+            }
+            ResolverVariant::RefetchField => ResolverReadOutType("() => void".to_string()),
+            ResolverVariant::MutationField(_) => {
+                ResolverReadOutType("(params: any) => void".to_string())
+            }
         },
     }
 }
 
 fn generate_resolver_return_type_declaration(
     action_kind: &ResolverActionKind,
-) -> ResolverReturnType {
+) -> Option<ResolverReturnType> {
     match action_kind {
-        ResolverActionKind::NamedImport(_) | ResolverActionKind::RefetchField => {
-            ResolverReturnType("ReturnType<typeof resolver>".to_string())
-        }
+        ResolverActionKind::NamedImport(_) => None,
+        ResolverActionKind::RefetchField => Some(ResolverReturnType(
+            "ReturnType<typeof resolver>".to_string(),
+        )),
         // TODO what should this be
-        ResolverActionKind::MutationField(_) => ResolverReturnType("any".to_string()),
+        ResolverActionKind::MutationField(_) => Some(ResolverReturnType("any".to_string())),
     }
 }
 

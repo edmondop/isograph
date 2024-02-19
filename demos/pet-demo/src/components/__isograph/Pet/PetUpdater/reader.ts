@@ -1,14 +1,12 @@
 import type {ReaderArtifact, ReaderAst} from '@isograph/react';
 import { PetUpdater as resolver } from '../../../PetUpdater.tsx';
-import Pet__set_pet_best_friend, { ReadOutType as Pet__set_pet_best_friend__outputType } from '../set_pet_best_friend/reader';
-import Pet__set_pet_tagline, { ReadOutType as Pet__set_pet_tagline__outputType } from '../set_pet_tagline/reader';
+import Pet__set_pet_best_friend, { Pet__set_pet_best_friend__outputType} from '../set_pet_best_friend/reader';
+import Pet__set_pet_tagline, { Pet__set_pet_tagline__outputType} from '../set_pet_tagline/reader';
 
 // the type, when read out (either via useLazyReference or via graph)
-export type ReadOutType = (React.FC<any>);
+export type Pet__PetUpdater__outputType = (React.FC<any>);
 
-export type ReadFromStoreType = Pet__PetUpdater__param;
-
-const readerAst: ReaderAst<ReadFromStoreType> = [
+const readerAst: ReaderAst<Pet__PetUpdater__param> = [
   {
     kind: "MutationField",
     alias: "set_pet_best_friend",
@@ -61,10 +59,11 @@ export type Pet__PetUpdater__param = { data:
 },
 [index: string]: any };
 
-// The type, when returned from the resolver
-export type ResolverReturnType = ReturnType<typeof resolver>;
-
-const artifact: ReaderArtifact<ReadFromStoreType, Pet__PetUpdater__param, ReadOutType> = {
+const artifact: ReaderArtifact<
+  Pet__PetUpdater__param,
+  Pet__PetUpdater__param,
+  Pet__PetUpdater__outputType
+> = {
   kind: "ReaderArtifact",
   resolver: resolver as any,
   readerAst,

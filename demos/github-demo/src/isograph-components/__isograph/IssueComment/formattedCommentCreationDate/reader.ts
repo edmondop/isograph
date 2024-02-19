@@ -2,11 +2,9 @@ import type {ReaderArtifact, ReaderAst} from '@isograph/react';
 import { formattedCommentCreationDate as resolver } from '../../../CommentList.tsx';
 
 // the type, when read out (either via useLazyReference or via graph)
-export type ReadOutType = ResolverReturnType;
+export type IssueComment__formattedCommentCreationDate__outputType = ReturnType<typeof resolver>;
 
-export type ReadFromStoreType = IssueComment__formattedCommentCreationDate__param;
-
-const readerAst: ReaderAst<ReadFromStoreType> = [
+const readerAst: ReaderAst<IssueComment__formattedCommentCreationDate__param> = [
   {
     kind: "Scalar",
     fieldName: "createdAt",
@@ -19,10 +17,11 @@ export type IssueComment__formattedCommentCreationDate__param = {
   createdAt: string,
 };
 
-// The type, when returned from the resolver
-export type ResolverReturnType = ReturnType<typeof resolver>;
-
-const artifact: ReaderArtifact<ReadFromStoreType, IssueComment__formattedCommentCreationDate__param, ReadOutType> = {
+const artifact: ReaderArtifact<
+  IssueComment__formattedCommentCreationDate__param,
+  IssueComment__formattedCommentCreationDate__param,
+  IssueComment__formattedCommentCreationDate__outputType
+> = {
   kind: "ReaderArtifact",
   resolver: resolver as any,
   readerAst,

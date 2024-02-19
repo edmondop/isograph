@@ -2,11 +2,9 @@ import type {ReaderArtifact, ReaderAst} from '@isograph/react';
 import { PullRequestLink as resolver } from '../../../PullRequestLink.tsx';
 
 // the type, when read out (either via useLazyReference or via graph)
-export type ReadOutType = (React.FC<any>);
+export type PullRequest__PullRequestLink__outputType = (React.FC<any>);
 
-export type ReadFromStoreType = PullRequest__PullRequestLink__param;
-
-const readerAst: ReaderAst<ReadFromStoreType> = [
+const readerAst: ReaderAst<PullRequest__PullRequestLink__param> = [
   {
     kind: "Scalar",
     fieldName: "number",
@@ -55,10 +53,11 @@ export type PullRequest__PullRequestLink__param = { data:
 },
 [index: string]: any };
 
-// The type, when returned from the resolver
-export type ResolverReturnType = ReturnType<typeof resolver>;
-
-const artifact: ReaderArtifact<ReadFromStoreType, PullRequest__PullRequestLink__param, ReadOutType> = {
+const artifact: ReaderArtifact<
+  PullRequest__PullRequestLink__param,
+  PullRequest__PullRequestLink__param,
+  PullRequest__PullRequestLink__outputType
+> = {
   kind: "ReaderArtifact",
   resolver: resolver as any,
   readerAst,

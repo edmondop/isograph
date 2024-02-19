@@ -2,11 +2,9 @@ import type {ReaderArtifact, ReaderAst} from '@isograph/react';
 import { Avatar as resolver } from '../../../avatar.tsx';
 
 // the type, when read out (either via useLazyReference or via graph)
-export type ReadOutType = (React.FC<any>);
+export type User__Avatar__outputType = (React.FC<any>);
 
-export type ReadFromStoreType = User__Avatar__param;
-
-const readerAst: ReaderAst<ReadFromStoreType> = [
+const readerAst: ReaderAst<User__Avatar__param> = [
   {
     kind: "Scalar",
     fieldName: "name",
@@ -28,10 +26,11 @@ export type User__Avatar__param = { data:
 },
 [index: string]: any };
 
-// The type, when returned from the resolver
-export type ResolverReturnType = ReturnType<typeof resolver>;
-
-const artifact: ReaderArtifact<ReadFromStoreType, User__Avatar__param, ReadOutType> = {
+const artifact: ReaderArtifact<
+  User__Avatar__param,
+  User__Avatar__param,
+  User__Avatar__outputType
+> = {
   kind: "ReaderArtifact",
   resolver: resolver as any,
   readerAst,

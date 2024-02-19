@@ -5,8 +5,7 @@ use std::collections::{
 
 use common_lang_types::{
     IsographObjectTypeName, LinkedFieldAlias, LinkedFieldName, Location, ScalarFieldAlias,
-    ScalarFieldName, SelectableFieldName, ServerFieldNormalizationKey, Span, VariableName,
-    WithLocation, WithSpan,
+    ScalarFieldName, SelectableFieldName, Span, VariableName, WithLocation, WithSpan,
 };
 use graphql_lang_types::GraphQLInputValueDefinition;
 use intern::{string_key::Intern, Lookup};
@@ -125,7 +124,8 @@ fn find_by_path(
                 if let MergedServerFieldSelection::LinkedField(linked_field) =
                     &linked_field_selection.item
                 {
-                    if linked_field.name.item == item.name {
+                    let linked_field_name: SelectableFieldName = linked_field.name.item.into();
+                    if linked_field_name == item.name {
                         return Some(linked_field);
                     }
                 }
@@ -146,11 +146,11 @@ impl Into<Vec<WithSpan<MergedServerFieldSelection>>> for MergedSelectionSet {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Copy, PartialOrd, Ord, Hash)]
+#[derive(Debug, Eq, PartialEq, Clone, PartialOrd, Ord, Hash)]
 enum NormalizationKey {
     // __typename,
     Id,
-    ServerField(ServerFieldNormalizationKey),
+    ServerField(NameAndArguments),
 }
 
 #[derive(Debug)]
@@ -200,14 +200,23 @@ pub struct MutationFieldResolverInfo {
 struct MergeTraversalState<'a> {
     resolver: &'a ValidatedSchemaResolver,
     paths_to_refetch_fields: Vec<(PathToRefetchField, ObjectId, ResolverVariant)>,
+    /// As we traverse selection sets, we need to keep track of the path we have
+    /// taken so far. This is because when we encounter a refetch query, we need
+    /// to take note of the path we took to reach that query, but continue
+    /// generating the merged selection set.
+    ///
+    /// Finally, once we have completed generating the merged selection set,
+    /// we re-traverse the paths to get the complete merged selection sets
+    /// needed for each refetch query. At this point, we have enough information
+    /// to generate the refetch query.
     current_path: PathToRefetchField,
-    encountered_resolver_ids: &'a mut HashSet<ResolverFieldId>,
+    encountered_resolver_ids: Option<&'a mut HashSet<ResolverFieldId>>,
 }
 
 impl<'a> MergeTraversalState<'a> {
     pub fn new(
         resolver: &'a ValidatedSchemaResolver,
-        encountered_resolver_ids: &'a mut HashSet<ResolverFieldId>,
+        encountered_resolver_ids: Option<&'a mut HashSet<ResolverFieldId>>,
     ) -> Self {
         Self {
             resolver,
@@ -218,21 +227,13 @@ impl<'a> MergeTraversalState<'a> {
     }
 }
 
-/// As we traverse selection sets, we need to keep track of the path we have
-/// taken so far. This is because when we encounter a refetch query, we need
-/// to take note of the path we took to reach that query, but continue
-/// generating the merged selection set.
-///
-/// Finally, once we have completed generating the merged selection set,
-/// we re-traverse the paths to get the complete merged selection sets
-/// needed for each refetch query. At this point, we have enough information
-/// to generate the refetch query.
 pub fn create_merged_selection_set(
     schema: &ValidatedSchema,
     parent_type: &ValidatedSchemaObject,
     validated_selections: &[WithSpan<ValidatedSelection>],
-    artifact_queue: &mut Vec<ArtifactQueueItem>,
-    encountered_resolver_ids: &mut HashSet<ResolverFieldId>,
+    // TODO consider ways to get rid of these parameters.
+    artifact_queue: Option<&mut Vec<ArtifactQueueItem>>,
+    encountered_resolver_ids: Option<&mut HashSet<ResolverFieldId>>,
     // N.B. we call this for non-fetchable resolvers now, but that is a smell
     root_fetchable_resolver: &ValidatedSchemaResolver,
 ) -> (MergedSelectionSet, Vec<RootRefetchedPath>) {
@@ -245,96 +246,149 @@ pub fn create_merged_selection_set(
         &mut merge_traversal_state,
     );
 
-    let val: Vec<_> = merge_traversal_state
-        .paths_to_refetch_fields
-        .into_iter()
-        .enumerate()
-        .map(
-            |(index, (path_to_refetch_field, refetch_field_parent_id, resolver_variant))| {
-                let nested_merged_selection_set =
-                    find_by_path(&merged_selection_set, &path_to_refetch_field);
+    match artifact_queue {
+        Some(artifact_queue) => {
+            let val: Vec<_> = merge_traversal_state
+                .paths_to_refetch_fields
+                .into_iter()
+                .enumerate()
+                .map(
+                    |(
+                        index,
+                        (path_to_refetch_field, refetch_field_parent_id, resolver_variant),
+                    )| {
+                        let nested_merged_selection_set =
+                            find_by_path(&merged_selection_set, &path_to_refetch_field);
 
-                // TODO we can pre-calculate this instead of re-iterating here
-                let reachable_variables = nested_merged_selection_set.reachable_variables();
+                        // TODO we can pre-calculate this instead of re-iterating here
+                        let reachable_variables = nested_merged_selection_set.reachable_variables();
 
-                let definitions_of_used_variables = reachable_variables
-                    .iter()
-                    .map(|variable_name| {
-                        root_fetchable_resolver
-                            .variable_definitions
+                        let definitions_of_used_variables = reachable_variables
                             .iter()
-                            .find(|definition| definition.item.name.item == *variable_name)
-                            // TODO make this an error, don't panic
-                            .expect(&format!(
-                                "Did not find matching variable definition. \
+                            .map(|variable_name| {
+                                root_fetchable_resolver
+                                    .variable_definitions
+                                    .iter()
+                                    .find(|definition| definition.item.name.item == *variable_name)
+                                    // TODO make this an error, don't panic
+                                    .expect(&format!(
+                                        "Did not find matching variable definition. \
                                 This might not be validated yet. For now, each resolver \
                                 containing a __refetch field must re-defined all used variables. \
                                 Resolver {} is missing variable definition {}",
-                                root_fetchable_resolver.name, variable_name
-                            ))
-                            .clone()
-                    })
-                    .collect();
+                                        root_fetchable_resolver.name, variable_name
+                                    ))
+                                    .clone()
+                            })
+                            .collect();
 
-                let field_name = match resolver_variant {
-                    ResolverVariant::RefetchField => {
-                        artifact_queue.push(ArtifactQueueItem::RefetchField(
-                            RefetchFieldResolverInfo {
-                                merged_selection_set: nested_merged_selection_set,
-                                refetch_field_parent_id,
-                                variable_definitions: definitions_of_used_variables,
-                                root_parent_object: schema
-                                    .schema_data
-                                    .object(root_fetchable_resolver.parent_object_id)
-                                    .name,
-                                root_fetchable_field: root_fetchable_resolver.name,
-                                refetch_query_index: index,
-                            },
-                        ));
-                        "__refetch".intern().into()
-                    }
-                    ResolverVariant::MutationField(MutationFieldResolverVariant {
-                        mutation_field_name,
-                        mutation_primary_field_name,
-                        mutation_field_arguments,
-                        filtered_mutation_field_arguments: _,
-                        requires_refinement,
-                    }) => {
-                        artifact_queue.push(ArtifactQueueItem::MutationField(
-                            MutationFieldResolverInfo {
-                                merged_selection_set: nested_merged_selection_set,
-                                refetch_field_parent_id,
-                                variable_definitions: definitions_of_used_variables,
-                                root_parent_object: schema
-                                    .schema_data
-                                    .object(root_fetchable_resolver.parent_object_id)
-                                    .name,
-                                root_fetchable_field: root_fetchable_resolver.name,
-                                refetch_query_index: index,
+                        let field_name = match resolver_variant {
+                            ResolverVariant::RefetchField => {
+                                artifact_queue.push(ArtifactQueueItem::RefetchField(
+                                    RefetchFieldResolverInfo {
+                                        merged_selection_set: nested_merged_selection_set,
+                                        refetch_field_parent_id,
+                                        variable_definitions: definitions_of_used_variables,
+                                        root_parent_object: schema
+                                            .schema_data
+                                            .object(root_fetchable_resolver.parent_object_id)
+                                            .name,
+                                        root_fetchable_field: root_fetchable_resolver.name,
+                                        refetch_query_index: index,
+                                    },
+                                ));
+                                "__refetch".intern().into()
+                            }
+                            ResolverVariant::MutationField(MutationFieldResolverVariant {
                                 mutation_field_name,
                                 mutation_primary_field_name,
-                                mutation_field_arguments: mutation_field_arguments.clone(),
-                                requires_refinement,
-                            },
-                        ));
-                        mutation_field_name
+                                mutation_field_arguments,
+                                filtered_mutation_field_arguments: _,
+                                mutation_primary_field_return_type_object_id,
+                            }) => {
+                                let requires_refinement =
+                                    if mutation_primary_field_return_type_object_id
+                                        == refetch_field_parent_id
+                                    {
+                                        RequiresRefinement::No
+                                    } else {
+                                        RequiresRefinement::Yes(
+                                            schema.schema_data.object(refetch_field_parent_id).name,
+                                        )
+                                    };
+
+                                artifact_queue.push(ArtifactQueueItem::MutationField(
+                                    MutationFieldResolverInfo {
+                                        merged_selection_set: nested_merged_selection_set,
+                                        refetch_field_parent_id,
+                                        variable_definitions: definitions_of_used_variables,
+                                        root_parent_object: schema
+                                            .schema_data
+                                            .object(root_fetchable_resolver.parent_object_id)
+                                            .name,
+                                        root_fetchable_field: root_fetchable_resolver.name,
+                                        refetch_query_index: index,
+                                        mutation_field_name,
+                                        mutation_primary_field_name,
+                                        mutation_field_arguments: mutation_field_arguments.clone(),
+                                        requires_refinement,
+                                    },
+                                ));
+                                mutation_field_name
+                            }
+                            _ => panic!("invalid resolver variant"),
+                        };
+
+                        let mut reachable_variables_vec: Vec<_> =
+                            reachable_variables.into_iter().collect();
+                        reachable_variables_vec.sort();
+
+                        RootRefetchedPath {
+                            path: path_to_refetch_field,
+                            variables: reachable_variables_vec,
+                            field_name,
+                        }
+                    },
+                )
+                .collect();
+
+            (merged_selection_set, val)
+        }
+        None => {
+            let val: Vec<_> = merge_traversal_state
+                .paths_to_refetch_fields
+                .into_iter()
+                .map(|(path_to_refetch_field, _, resolver_variant)| {
+                    let nested_merged_selection_set =
+                        find_by_path(&merged_selection_set, &path_to_refetch_field);
+
+                    // TODO we can pre-calculate this instead of re-iterating here
+                    let reachable_variables = nested_merged_selection_set.reachable_variables();
+
+                    let field_name = match resolver_variant {
+                        ResolverVariant::RefetchField => "__refetch".intern().into(),
+                        ResolverVariant::MutationField(MutationFieldResolverVariant {
+                            mutation_field_name,
+                            ..
+                        }) => mutation_field_name,
+                        _ => panic!("invalid resolver variant"),
+                    };
+
+                    let mut reachable_variables_vec: Vec<_> =
+                        reachable_variables.into_iter().collect();
+                    reachable_variables_vec.sort();
+
+                    RootRefetchedPath {
+                        path: path_to_refetch_field,
+                        variables: reachable_variables_vec,
+                        field_name,
                     }
-                    _ => panic!("invalid resolver variant"),
-                };
+                })
+                .collect();
 
-                let mut reachable_variables_vec: Vec<_> = reachable_variables.into_iter().collect();
-                reachable_variables_vec.sort();
-
-                RootRefetchedPath {
-                    path: path_to_refetch_field,
-                    variables: reachable_variables_vec,
-                    field_name,
-                }
-            },
-        )
-        .collect();
-
-    (merged_selection_set, val)
+            (merged_selection_set, val)
+        }
+    }
 }
 
 fn create_merged_selection_set_with_merge_traversal_state(
@@ -381,9 +435,11 @@ fn merge_selections_into_set(
                             merge_scalar_server_field(scalar_field, merged_selection_map, span);
                         }
                         DefinedField::ResolverField(resolver_field_id) => {
-                            merge_traversal_state
-                                .encountered_resolver_ids
-                                .insert(*resolver_field_id);
+                            if let Some(ref mut encountered_resolver_ids) =
+                                merge_traversal_state.encountered_resolver_ids
+                            {
+                                encountered_resolver_ids.insert(*resolver_field_id);
+                            }
                             merge_scalar_resolver_field(
                                 parent_type,
                                 schema,
@@ -395,17 +451,15 @@ fn merge_selections_into_set(
                     };
                 }
                 ServerFieldSelection::LinkedField(new_linked_field) => {
-                    let normalization_key = NormalizationKey::ServerField(
-                        HACK_combine_name_and_variables_into_normalization_alias(
-                            new_linked_field.name.item.into(),
-                            &new_linked_field.arguments,
-                        ),
-                    );
+                    let normalization_key = NormalizationKey::ServerField(name_and_arguments(
+                        new_linked_field.name.item.into(),
+                        &new_linked_field.arguments,
+                    ));
                     merge_traversal_state
                         .current_path
                         .linked_fields
                         .push(NameAndArguments {
-                            name: new_linked_field.name.item,
+                            name: new_linked_field.name.item.into(),
                             arguments: new_linked_field
                                 .arguments
                                 .iter()
@@ -541,7 +595,7 @@ fn merge_scalar_resolver_field(
         mutation_field_arguments,
         filtered_mutation_field_arguments,
         mutation_field_name: _,
-        requires_refinement,
+        mutation_primary_field_return_type_object_id,
     }) = &resolver_field.variant
     {
         merge_traversal_state.paths_to_refetch_fields.push((
@@ -552,7 +606,8 @@ fn merge_scalar_resolver_field(
                 mutation_primary_field_name: *mutation_primary_field_name,
                 mutation_field_arguments: mutation_field_arguments.clone(),
                 filtered_mutation_field_arguments: filtered_mutation_field_arguments.clone(),
-                requires_refinement: *requires_refinement,
+                mutation_primary_field_return_type_object_id:
+                    *mutation_primary_field_return_type_object_id,
             }),
         ));
     }
@@ -563,11 +618,10 @@ fn merge_scalar_server_field(
     merged_selection_set: &mut MergedSelectionMap,
     span: Span,
 ) {
-    let normalization_key =
-        NormalizationKey::ServerField(HACK_combine_name_and_variables_into_normalization_alias(
-            scalar_field.name.item.into(),
-            &scalar_field.arguments,
-        ));
+    let normalization_key = NormalizationKey::ServerField(name_and_arguments(
+        scalar_field.name.item.into(),
+        &scalar_field.arguments,
+    ));
     match merged_selection_set.entry(normalization_key) {
         Entry::Occupied(occupied) => {
             match occupied.get().item {
@@ -593,26 +647,19 @@ fn merge_scalar_server_field(
     }
 }
 
-/// In order to avoid requiring a normalization AST, we write the variables
-/// used in the alias. Once we have a normalization AST, we can remove this.
-#[allow(non_snake_case)]
-fn HACK_combine_name_and_variables_into_normalization_alias(
+fn name_and_arguments(
     name: SelectableFieldName,
     arguments: &[WithLocation<SelectionFieldArgument>],
-) -> ServerFieldNormalizationKey {
-    if arguments.is_empty() {
-        name.into()
-    } else {
-        let mut alias_str = name.to_string();
-
-        for argument in arguments {
-            alias_str.push_str(&format!(
-                "__{}_{}",
-                argument.item.name.item,
-                &argument.item.value.item.to_string()[1..]
-            ));
-        }
-        alias_str.intern().into()
+) -> NameAndArguments {
+    NameAndArguments {
+        name,
+        arguments: arguments
+            .iter()
+            .map(|selection_field_argument| ArgumentKeyAndValue {
+                key: selection_field_argument.item.name.item,
+                value: selection_field_argument.item.value.item.clone(),
+            })
+            .collect(),
     }
 }
 
@@ -633,12 +680,10 @@ fn HACK__merge_linked_fields(
             MergedServerFieldSelection::ScalarField(scalar_field) => {
                 // N.B. if you have a field named "id" which is a linked field, this will probably
                 // work incorrectly!
-                let normalization_key = NormalizationKey::ServerField(
-                    HACK_combine_name_and_variables_into_normalization_alias(
-                        scalar_field.name.item.into(),
-                        &scalar_field.arguments,
-                    ),
-                );
+                let normalization_key = NormalizationKey::ServerField(name_and_arguments(
+                    scalar_field.name.item.into(),
+                    &scalar_field.arguments,
+                ));
 
                 merged_selection_set.insert(
                     normalization_key,
@@ -649,12 +694,10 @@ fn HACK__merge_linked_fields(
                 )
             }
             MergedServerFieldSelection::LinkedField(linked_field) => {
-                let normalization_key = NormalizationKey::ServerField(
-                    HACK_combine_name_and_variables_into_normalization_alias(
-                        linked_field.name.item.into(),
-                        &linked_field.arguments,
-                    ),
-                );
+                let normalization_key = NormalizationKey::ServerField(name_and_arguments(
+                    linked_field.name.item.into(),
+                    &linked_field.arguments,
+                ));
                 merged_selection_set.insert(
                     normalization_key,
                     WithSpan::new(

@@ -1,5 +1,3 @@
-use std::fmt;
-
 use common_lang_types::{
     ConstExportName, FieldArgumentName, FieldNameOrAlias, HasName, IsographDirectiveName,
     LinkedFieldAlias, LinkedFieldName, ResolverDefinitionPath, ScalarFieldAlias, ScalarFieldName,
@@ -116,6 +114,13 @@ impl<TScalarField, TLinkedField> ServerFieldSelection<TScalarField, TLinkedField
             ServerFieldSelection::LinkedField(l) => {
                 Ok(ServerFieldSelection::LinkedField(map_linked_field(l)?))
             }
+        }
+    }
+
+    pub fn name_or_alias(&self) -> WithLocation<FieldNameOrAlias> {
+        match self {
+            ServerFieldSelection::ScalarField(scalar_field) => scalar_field.name_or_alias(),
+            ServerFieldSelection::LinkedField(linked_field) => linked_field.name_or_alias(),
         }
     }
 }
@@ -236,15 +241,6 @@ impl NonConstantValue {
             NonConstantValue::Variable(name) => format!("v_{}", name),
             // l for literal, i.e. this is shared with others
             NonConstantValue::Integer(int_value) => format!("l_{}", int_value),
-        }
-    }
-}
-
-impl fmt::Display for NonConstantValue {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            NonConstantValue::Variable(name) => write!(f, "${}", name),
-            NonConstantValue::Integer(int_value) => write!(f, "{}", int_value),
         }
     }
 }

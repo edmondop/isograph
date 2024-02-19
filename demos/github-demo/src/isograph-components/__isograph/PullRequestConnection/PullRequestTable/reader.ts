@@ -1,15 +1,13 @@
 import type {ReaderArtifact, ReaderAst} from '@isograph/react';
 import { PullRequestTable as resolver } from '../../../PullRequestTable.tsx';
-import Actor__UserLink, { ReadOutType as Actor__UserLink__outputType } from '../../Actor/UserLink/reader';
-import PullRequest__PullRequestLink, { ReadOutType as PullRequest__PullRequestLink__outputType } from '../../PullRequest/PullRequestLink/reader';
-import PullRequest__createdAtFormatted, { ReadOutType as PullRequest__createdAtFormatted__outputType } from '../../PullRequest/createdAtFormatted/reader';
+import Actor__UserLink, { Actor__UserLink__outputType} from '../../Actor/UserLink/reader';
+import PullRequest__PullRequestLink, { PullRequest__PullRequestLink__outputType} from '../../PullRequest/PullRequestLink/reader';
+import PullRequest__createdAtFormatted, { PullRequest__createdAtFormatted__outputType} from '../../PullRequest/createdAtFormatted/reader';
 
 // the type, when read out (either via useLazyReference or via graph)
-export type ReadOutType = (React.FC<any>);
+export type PullRequestConnection__PullRequestTable__outputType = (React.FC<any>);
 
-export type ReadFromStoreType = PullRequestConnection__PullRequestTable__param;
-
-const readerAst: ReaderAst<ReadFromStoreType> = [
+const readerAst: ReaderAst<PullRequestConnection__PullRequestTable__param> = [
   {
     kind: "Linked",
     fieldName: "edges",
@@ -113,10 +111,11 @@ export type PullRequestConnection__PullRequestTable__param = { data:
 },
 [index: string]: any };
 
-// The type, when returned from the resolver
-export type ResolverReturnType = ReturnType<typeof resolver>;
-
-const artifact: ReaderArtifact<ReadFromStoreType, PullRequestConnection__PullRequestTable__param, ReadOutType> = {
+const artifact: ReaderArtifact<
+  PullRequestConnection__PullRequestTable__param,
+  PullRequestConnection__PullRequestTable__param,
+  PullRequestConnection__PullRequestTable__outputType
+> = {
   kind: "ReaderArtifact",
   resolver: resolver as any,
   readerAst,

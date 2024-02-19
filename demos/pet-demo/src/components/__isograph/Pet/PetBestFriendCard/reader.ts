@@ -1,13 +1,11 @@
 import type {ReaderArtifact, ReaderAst} from '@isograph/react';
 import { PetBestFriendCard as resolver } from '../../../PetBestFriendCard.tsx';
-import Pet__PetUpdater, { ReadOutType as Pet__PetUpdater__outputType } from '../PetUpdater/reader';
+import Pet__PetUpdater, { Pet__PetUpdater__outputType} from '../PetUpdater/reader';
 
 // the type, when read out (either via useLazyReference or via graph)
-export type ReadOutType = (React.FC<any>);
+export type Pet__PetBestFriendCard__outputType = (React.FC<any>);
 
-export type ReadFromStoreType = Pet__PetBestFriendCard__param;
-
-const readerAst: ReaderAst<ReadFromStoreType> = [
+const readerAst: ReaderAst<Pet__PetBestFriendCard__param> = [
   {
     kind: "Scalar",
     fieldName: "id",
@@ -78,10 +76,11 @@ export type Pet__PetBestFriendCard__param = { data:
 },
 [index: string]: any };
 
-// The type, when returned from the resolver
-export type ResolverReturnType = ReturnType<typeof resolver>;
-
-const artifact: ReaderArtifact<ReadFromStoreType, Pet__PetBestFriendCard__param, ReadOutType> = {
+const artifact: ReaderArtifact<
+  Pet__PetBestFriendCard__param,
+  Pet__PetBestFriendCard__param,
+  Pet__PetBestFriendCard__outputType
+> = {
   kind: "ReaderArtifact",
   resolver: resolver as any,
   readerAst,

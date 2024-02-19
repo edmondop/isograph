@@ -2,11 +2,9 @@ import type {ReaderArtifact, ReaderAst} from '@isograph/react';
 import { createdAtFormatted as resolver } from '../../../PullRequestTable.tsx';
 
 // the type, when read out (either via useLazyReference or via graph)
-export type ReadOutType = ResolverReturnType;
+export type PullRequest__createdAtFormatted__outputType = ReturnType<typeof resolver>;
 
-export type ReadFromStoreType = PullRequest__createdAtFormatted__param;
-
-const readerAst: ReaderAst<ReadFromStoreType> = [
+const readerAst: ReaderAst<PullRequest__createdAtFormatted__param> = [
   {
     kind: "Scalar",
     fieldName: "createdAt",
@@ -19,10 +17,11 @@ export type PullRequest__createdAtFormatted__param = {
   createdAt: string,
 };
 
-// The type, when returned from the resolver
-export type ResolverReturnType = ReturnType<typeof resolver>;
-
-const artifact: ReaderArtifact<ReadFromStoreType, PullRequest__createdAtFormatted__param, ReadOutType> = {
+const artifact: ReaderArtifact<
+  PullRequest__createdAtFormatted__param,
+  PullRequest__createdAtFormatted__param,
+  PullRequest__createdAtFormatted__outputType
+> = {
   kind: "ReaderArtifact",
   resolver: resolver as any,
   readerAst,
