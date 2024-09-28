@@ -10,11 +10,12 @@
     "tsc": "tsc"
   },
   "dependencies": {
-    "@isograph/react": "*",
-    "@isograph/react-disposable-state": "*",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@fontsource/roboto": "^5.0.3",
+    "@isograph/react": "*",
+    "@isograph/react-disposable-state": "*",
+    "@isograph/swc-plugin": "link:../../crates/swc_plugin",
     "@mui/icons-material": "^5.11.16",
     "@mui/material": "^5.13.5",
     "@types/node": "18.16.3",
@@ -26,7 +27,7 @@
     "express": "^4.18.2",
     "express-graphql": "^0.12.0",
     "graphql": "^16.6.0",
-    "next": "13.3.2",
+    "next": "14.2.2",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "typescript": "5.0.4"

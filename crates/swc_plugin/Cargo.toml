@@ -1,21 +1,22 @@
 [package]
-authors      = { workspace = true }
 description  = "SWC plugin for Isograph"
-homepage     = { workspace = true }
-license      = { workspace = true }
 name         = "swc_plugin_isograph"
-publish      = false
-repository   = { workspace = true }
 version      = { workspace = true }
+license      = { workspace = true }
+edition      = { workspace = true } 
 
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+crate-type = ["cdylib"]
 
 [dependencies]
-once_cell        = { workspace = true }
 regex            = { workspace = true }
 serde            = { workspace = true }
 serde_json       = { workspace = true }
-# swc_relay        = { path = "./transform" }
+swc_common = { version = "0.33.19", features = ["concurrent"] }
+swc_core = { version = "0.90.22", features = ["ecma_plugin_transform"] }
+swc_ecma_ast = "0.112.5"
+swc_ecma_utils = "0.127.12"
+swc_ecma_visit = "0.98.6"
+swc_plugin_macro = "0.9.16"
 tracing          = { workspace = true, features = ["release_max_level_off"] }

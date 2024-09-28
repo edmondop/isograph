@@ -1,0 +1,22 @@
+{
+  "name": "@isograph/swc-plugin",
+  "version": "0.2.0",
+  "description": "SWC plugin for Isograph",
+  "main": "swc_plugin_isograph.wasm",
+  "exports": {
+    ".": "./swc_plugin_isograph.wasm"
+  },
+  "scripts": {
+    "prepack": "cargo build --release -p swc_plugin_isograph --target wasm32-wasi && cp ../../target/wasm32-wasi/release/swc_plugin_isograph.wasm ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/isographlabs/isograph.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/isographlabs/isograph/issues"
+  },
+  "homepage": "https://github.com/isographlabs/isograph#readme"
+}
