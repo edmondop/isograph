@@ -1,0 +1,21 @@
+[package]
+authors      = { workspace = true }
+description  = "SWC plugin for Isograph"
+homepage     = { workspace = true }
+license      = { workspace = true }
+name         = "swc_plugin_isograph"
+publish      = false
+repository   = { workspace = true }
+version      = { workspace = true }
+
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+once_cell        = { workspace = true }
+regex            = { workspace = true }
+serde            = { workspace = true }
+serde_json       = { workspace = true }
+# swc_relay        = { path = "./transform" }
+tracing          = { workspace = true, features = ["release_max_level_off"] }
